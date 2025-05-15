@@ -1,0 +1,16 @@
+services:
+  database:
+    image: "postgres:17.5"
+    restart: unless-stopped
+
+    ports:
+      - 5432:5432
+
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: KitchenDB
+
+    volumes:
+      - ./postgres-init:/docker-entrypoint-initdb.d
+
