@@ -1,22 +1,21 @@
 import os
+from collections.abc import Generator
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import sessionmaker, Session
 
 load_dotenv()
-username = os.getenv("username")
-password = os.getenv("password")
-host = os.getenv("hostname")
-port = os.getenv("port")
-database = os.getenv("db_name")
-connection_string = (
-    f"postgresql+psycopg2://{username}:{password}@{host}:{port}/{database}"
-)
+connection_string = os.getenv("CONNECTION_STRING", 
+                              "postgresql+psycopg2://username:password@localhost:5432/postgres")
 
 
-def db_session() -> Session:
-    engine = create_engine(connection_string)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    return session
+engine = create_engine(connection_string)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+def get_db() -> Generator[Session, None, None]:
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

@@ -1,23 +1,23 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
-from database.database import db_session
-from models.user_model import User
+from middleware.auth import authenticate
+
+from controllers.user_controller import user_router
+from controllers.auth import login_router
 
 app = FastAPI()
+app.include_router(user_router)
+app.include_router(login_router)
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-
-# @app.middleware("http")
-# def auth():
-#    print("add auth here")
-
-
-@app.get("/users")
-def get_users():
-    session = db_session()
-    users = session.query(User).all()
-    return {"users": users}
+@app.middleware("http")
+async def auth_middleware(request: Request, call_next):
+    return await authenticate(request, call_next)
