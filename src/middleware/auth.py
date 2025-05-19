@@ -9,7 +9,7 @@ from utils import decode_jwt
 load_dotenv()
 
 async def authenticate(request: Request, call_next):
-    if request.url.path == "/login" or request.url.path == "/register":
+    if request.url.path in ["/login", "/register", "/docs", "/openapi.json"]:
         return await call_next(request)
 
     authorization = request.headers.get("Authorization")

@@ -1,13 +1,10 @@
-from fastapi import APIRouter, Depends, Request
-from sqlalchemy.orm import Session
-from fastapi import Depends
+from fastapi import APIRouter, Request
 
-from database.database import get_db
-from models.user import LoginModel
+from models.user import UserModel
 
 user_router = APIRouter(prefix="/user", tags=["user"])
 
-@user_router.get("")
+@user_router.get("", response_model=UserModel)
 async def get_user(request: Request):
     user = request.state.user
     return user
