@@ -1,25 +1,24 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
 from database.database import get_db
+import bcrypt
 
 from db_models.user_model import User
 from database.user_queries import get_user_via_email
-from models.user import Token, LoginModel, CreateUser
+from models.user import Token, LoginModel, CreateUser, UserModel
 from utils import create_access_token, authenticate_user
 
 
 login_router = APIRouter(tags=["login"])
                         
-@login_router.post("/register", status_code=201)
+@login_router.post("/register", status_code=status.HTTP_201_CREATED)
 def register(user: CreateUser, session: Session = Depends(get_db)):
-    print("Creating user:", user)
     existing_user = get_user_via_email(user.email, session)
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
-    pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-    hashed_password = pwd_context.hash(user.password)
+    bcrypt_salt = bcrypt.gensalt()
+    hashed_password = bcrypt.hashpw(user.password.encode('utf-8'), bcrypt_salt).decode('utf-8')
     new_user = User(
         name=user.name,
         email=user.email,
@@ -28,7 +27,7 @@ def register(user: CreateUser, session: Session = Depends(get_db)):
     session.add(new_user)
     session.commit()
     session.refresh(new_user)
-    return {"user": new_user}
+    return UserModel.model_validate(new_user)
 
 @login_router.post("/login", response_model=Token)
 async def login(login: LoginModel, db: Session = Depends(get_db)):
@@ -41,4 +40,7 @@ async def login(login: LoginModel, db: Session = Depends(get_db)):
     access_token = create_access_token(
         data={"sub": user.email}
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return Token(
+        access_token=access_token,
+        token_type="bearer"
+    )
