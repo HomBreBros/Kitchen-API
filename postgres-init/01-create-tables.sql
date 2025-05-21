@@ -1,0 +1,17 @@
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE ingredient (
+  id INT PRIMARY KEY,
+  generic_name VARCHAR(255) NOT NULL,
+  category VARCHAR(100),
+  unit VARCHAR(50) NOT NULL
+);
+
+CREATE INDEX idx_ingredient_category ON ingredient(category);
